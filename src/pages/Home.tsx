@@ -45,10 +45,10 @@ export default function Home() {
             Count is <span className="font-mono text-purple-600 dark:text-purple-400 font-bold ml-1">{count}</span>
           </button>
           <Link
-            to="/todos"
+            to="/rooms"
             className="px-5 py-2.5 rounded-xl font-medium text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-sm hover:shadow-md hover:shadow-purple-500/20 active:scale-95 transition-all inline-flex items-center gap-1.5"
           >
-            Go to Todos Page
+            Go to Rooms Page
             <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>

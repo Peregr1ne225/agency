@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
-import Todos from './pages/Todos'
+import Rooms from './pages/Rooms'
 
 function App() {
   return (
@@ -31,7 +31,7 @@ function App() {
                 Home
               </NavLink>
               <NavLink
-                to="/todos"
+                to="/rooms"
                 className={({ isActive }) =>
                   `px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     isActive
@@ -40,7 +40,7 @@ function App() {
                   }`
                 }
               >
-                Todos
+                Rooms
               </NavLink>
             </nav>
           </div>
@@ -49,7 +49,8 @@ function App() {
         <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-10">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/todos" element={<Todos />} />
+            <Route path="/rooms" element={<Rooms />} />
+            <Route path="/todos" element={<Navigate to="/rooms" replace />} />
           </Routes>
         </main>
       </div>
