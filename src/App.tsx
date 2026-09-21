@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Rooms from './pages/Rooms'
+import Insert from './pages/Insert'
 
 function App() {
   return (
@@ -40,7 +41,19 @@ function App() {
                   }`
                 }
               >
-                Rooms
+                Tables & Joins
+              </NavLink>
+              <NavLink
+                to="/insert"
+                className={({ isActive }) =>
+                  `px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold shadow-xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
+                  }`
+                }
+              >
+                + Insert Data
               </NavLink>
             </nav>
           </div>
@@ -50,6 +63,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
+            <Route path="/insert" element={<Insert />} />
             <Route path="/todos" element={<Navigate to="/rooms" replace />} />
           </Routes>
         </main>
