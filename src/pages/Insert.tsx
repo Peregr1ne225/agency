@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../utils/supabase'
 
-const ROOM_TYPES = [
+const CONDO_ROOM_TYPES = [
   'Studio',
   '1 Bed',
   '1 Bed Plus',
@@ -10,6 +10,9 @@ const ROOM_TYPES = [
   'Duo Space',
   'Loft',
   'Duplex',
+] as const
+
+const TOWNHOME_HOUSE_TYPES = [
   'Corner',
   'Clubhouse',
   'General',
@@ -101,6 +104,27 @@ export default function Insert() {
     ? estatesList.find((est) => est.e_name?.trim().toLowerCase() === trimmedEstateName.toLowerCase())
     : null
   const isNewEstate = trimmedEstateName.length > 0 && !matchedEstate
+
+  // Active Estate Type (from matched existing estate, or user selection)
+  const currentEstateType: 'condo' | 'townhome' = matchedEstate
+    ? (matchedEstate.type?.toLowerCase() === 'townhome' ? 'townhome' : 'condo')
+    : roomForm.new_estate_type
+
+  const isTownhome = currentEstateType === 'townhome'
+  const availableTypes = isTownhome ? TOWNHOME_HOUSE_TYPES : CONDO_ROOM_TYPES
+
+  // Automatically update room_type if it doesn't match the active estate type options
+  useEffect(() => {
+    if (isTownhome) {
+      if (!TOWNHOME_HOUSE_TYPES.includes(roomForm.room_type as any)) {
+        setRoomForm((prev) => ({ ...prev, room_type: TOWNHOME_HOUSE_TYPES[0] }))
+      }
+    } else {
+      if (!CONDO_ROOM_TYPES.includes(roomForm.room_type as any)) {
+        setRoomForm((prev) => ({ ...prev, room_type: CONDO_ROOM_TYPES[0] }))
+      }
+    }
+  }, [isTownhome])
 
   // Helper: query maximum ID from a table in case identity is not configured yet
   async function getMaxId(table: 'room' | 'estate', idCol: 'room_id' | 'estate_id'): Promise<number> {
@@ -303,9 +327,10 @@ export default function Insert() {
       setStatusMsg({ type: 'error', text: `Room insert failed: ${roomRes.error.message}` })
     } else {
       const createdRoomId = roomRes.data?.[0]?.room_id ?? payload.room_id ?? 'Auto'
+      const entityLabel = isTownhome ? 'Townhome' : 'Room'
       const msg = autoCreatedEstateName
-        ? `✨ Auto-created estate "${autoCreatedEstateName}" (#${targetEstateId}) and inserted Room #${createdRoomId}!`
-        : `Room #${createdRoomId} (${payload.room_type}) successfully created!`
+        ? `✨ Auto-created estate "${autoCreatedEstateName}" (#${targetEstateId}) and inserted ${entityLabel} #${createdRoomId}!`
+        : `${entityLabel} #${createdRoomId} (${payload.room_type}) successfully created!`
       setStatusMsg({ type: 'success', text: msg })
 
       // Reset room form
@@ -543,63 +568,14 @@ export default function Insert() {
         >
           <div>
             <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              New Room Listing
+              {isTownhome ? 'New Townhome Listing' : 'New Room Listing'}
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               Insert a record into <code className="font-mono text-purple-600 dark:text-purple-400">public.room</code> (ID generated automatically)
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {/* room_number */}
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Room Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. 402/15 or 101"
-                value={roomForm.room_number}
-                onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
-              />
-            </div>
-
-            {/* room_type Dropdown */}
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Room Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={roomForm.room_type}
-                onChange={(e) => setRoomForm({ ...roomForm, room_type: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all cursor-pointer font-medium"
-              >
-                {ROOM_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Optional Custom room_id */}
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Custom Room ID <span className="text-zinc-400 font-normal">(Optional - auto if blank)</span>
-              </label>
-              <input
-                type="number"
-                placeholder="Leave blank for auto ID"
-                value={roomForm.room_id}
-                onChange={(e) => setRoomForm({ ...roomForm, room_id: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
-              />
-            </div>
-          </div>
-
-          {/* Linked Estate Name with Creatable / Autocomplete support */}
+          {/* Linked Estate Name with Creatable / Autocomplete support (MOVED TO TOP) */}
           <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
@@ -626,9 +602,9 @@ export default function Insert() {
                 onChange={(e) => setRoomForm({ ...roomForm, estate_name: e.target.value })}
                 className="flex-1 px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
               />
-              {isNewEstate && (
+              {!matchedEstate && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 whitespace-nowrap">Property Type:</span>
+                  <span className="text-xs text-zinc-500 whitespace-nowrap">Estate Type:</span>
                   <select
                     value={roomForm.new_estate_type}
                     onChange={(e) => setRoomForm({ ...roomForm, new_estate_type: e.target.value as any })}
@@ -651,6 +627,55 @@ export default function Insert() {
                 </option>
               ))}
             </datalist>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {/* room_number */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                {isTownhome ? 'House Number' : 'Room Number'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder={isTownhome ? 'e.g. 88/12 or House 5' : 'e.g. 402/15 or 101'}
+                value={roomForm.room_number}
+                onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
+              />
+            </div>
+
+            {/* Room / House Type Dropdown */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                {isTownhome ? 'House Type' : 'Room Type'} <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={roomForm.room_type}
+                onChange={(e) => setRoomForm({ ...roomForm, room_type: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all cursor-pointer font-medium"
+              >
+                {availableTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Optional Custom room_id */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                Custom {isTownhome ? 'House' : 'Room'} ID <span className="text-zinc-400 font-normal">(Optional - auto if blank)</span>
+              </label>
+              <input
+                type="number"
+                placeholder="Leave blank for auto ID"
+                value={roomForm.room_id}
+                onChange={(e) => setRoomForm({ ...roomForm, room_id: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono"
+              />
+            </div>
           </div>
 
           {/* Price and Size */}
@@ -1090,7 +1115,7 @@ export default function Insert() {
               disabled={submitting}
               className="px-6 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer"
             >
-              {submitting ? 'Inserting...' : 'Insert Room'}
+              {submitting ? 'Inserting...' : isTownhome ? 'Insert Townhome' : 'Insert Room'}
             </button>
           </div>
         </form>

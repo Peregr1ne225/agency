@@ -56,6 +56,8 @@ The app connects to Supabase with the following Postgres tables in the `public` 
 
 - **Field Values / Options**:
   - `room_type`: `Studio`, `1 Bed`, `1 Bed Plus`, `2 Bed`, `Duo Space`, `Loft`, `Duplex`, `Corner`, `Clubhouse`, `General`
+    - **Condo** (Room Type): `Studio`, `1 Bed`, `1 Bed Plus`, `2 Bed`, `Duo Space`, `Loft`, `Duplex`
+    - **Townhome** (House Type): `Corner`, `Clubhouse`, `General`
   - `electronic`: `Washer`, `Refrigerater`, `conditioner`
   - `pet` / `pet_type`: `cat`, `dog`, `etc`
 
