@@ -68,9 +68,12 @@ export default function Insert() {
     advance: '',
     remark: '',
     link_post: '',
-    contact_line: '',
-    contact_facebook: '',
-    contact_tel: '',
+    contact_line_name: '',
+    contact_line_id: '',
+    contact_fb_name: '',
+    contact_fb_id: '',
+    contact_tel_name: '',
+    contact_tel_number: '',
   })
 
   // Fetch estates for the dropdown/autocomplete in room form
@@ -197,6 +200,17 @@ export default function Insert() {
     return parts.length > 0 ? parts.join(', ') : null
   }
 
+  function formatContact(name: string, value: string): string | null {
+    const n = name.trim().replace(/\/+$/, '').trim()
+    const v = value.trim().replace(/^\/+/, '').trim()
+    if (n && v) {
+      return `${n}/${v}`
+    }
+    if (v) return v
+    if (n) return n
+    return null
+  }
+
   // Handle Room Insert (with automatic estate creation if new name typed)
   async function handleRoomSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -263,9 +277,9 @@ export default function Insert() {
       advance: roomForm.advance ? parseFloat(roomForm.advance) : null,
       remark: roomForm.remark.trim() || null,
       link_post: roomForm.link_post.trim() || null,
-      contact_line: roomForm.contact_line.trim() || null,
-      contact_facebook: roomForm.contact_facebook.trim() || null,
-      contact_tel: roomForm.contact_tel.trim() || null,
+      contact_line: formatContact(roomForm.contact_line_name, roomForm.contact_line_id),
+      contact_facebook: formatContact(roomForm.contact_fb_name, roomForm.contact_fb_id),
+      contact_tel: formatContact(roomForm.contact_tel_name, roomForm.contact_tel_number),
     }
 
     if (roomForm.room_id.trim()) {
@@ -314,9 +328,12 @@ export default function Insert() {
         advance: '',
         remark: '',
         link_post: '',
-        contact_line: '',
-        contact_facebook: '',
-        contact_tel: '',
+        contact_line_name: '',
+        contact_line_id: '',
+        contact_fb_name: '',
+        contact_fb_id: '',
+        contact_tel_name: '',
+        contact_tel_number: '',
       }))
     }
   }
@@ -893,43 +910,149 @@ export default function Insert() {
             </div>
           </div>
 
-          {/* Contacts */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Line ID
-              </label>
-              <input
-                type="text"
-                placeholder="@agent_line"
-                value={roomForm.contact_line}
-                onChange={(e) => setRoomForm({ ...roomForm, contact_line: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500"
-              />
+          {/* Contact Information (Line, Facebook, Phone with Name/Contact) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-200 dark:border-zinc-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  Contact Channels
+                </label>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Saved automatically in <code className="font-mono text-purple-600 dark:text-purple-400">name/contact</code> format (e.g. <code className="font-mono text-purple-600 dark:text-purple-400">Alex/@line_id</code>, <code className="font-mono text-purple-600 dark:text-purple-400">Alex/0812345678</code>)
+                </p>
+              </div>
+              {roomForm.contact_line_name.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const n = roomForm.contact_line_name.trim()
+                    setRoomForm((prev) => ({
+                      ...prev,
+                      contact_fb_name: n,
+                      contact_tel_name: n,
+                    }))
+                  }}
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium self-start sm:self-auto cursor-pointer"
+                >
+                  Apply "{roomForm.contact_line_name.trim()}" name to all
+                </button>
+              )}
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Facebook Contact
-              </label>
-              <input
-                type="text"
-                placeholder="fb.com/page"
-                value={roomForm.contact_facebook}
-                onChange={(e) => setRoomForm({ ...roomForm, contact_facebook: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                placeholder="081-xxx-xxxx"
-                value={roomForm.contact_tel}
-                onChange={(e) => setRoomForm({ ...roomForm, contact_tel: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Line Contact */}
+              <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    Line Contact
+                  </span>
+                  {formatContact(roomForm.contact_line_name, roomForm.contact_line_id) && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 truncate max-w-[140px]" title={formatContact(roomForm.contact_line_name, roomForm.contact_line_id)!}>
+                      {formatContact(roomForm.contact_line_name, roomForm.contact_line_id)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Contact Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Alex"
+                    value={roomForm.contact_line_name}
+                    onChange={(e) => setRoomForm({ ...roomForm, contact_line_name: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Line ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. @agent_line"
+                    value={roomForm.contact_line_id}
+                    onChange={(e) => setRoomForm({ ...roomForm, contact_line_id: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Facebook Contact */}
+              <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                    Facebook Contact
+                  </span>
+                  {formatContact(roomForm.contact_fb_name, roomForm.contact_fb_id) && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 truncate max-w-[140px]" title={formatContact(roomForm.contact_fb_name, roomForm.contact_fb_id)!}>
+                      {formatContact(roomForm.contact_fb_name, roomForm.contact_fb_id)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Contact Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Alex"
+                    value={roomForm.contact_fb_name}
+                    onChange={(e) => setRoomForm({ ...roomForm, contact_fb_name: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Facebook ID / Page
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. fb.com/alex"
+                    value={roomForm.contact_fb_id}
+                    onChange={(e) => setRoomForm({ ...roomForm, contact_fb_id: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Phone Contact */}
+              <div className="p-3.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                    Phone Contact
+                  </span>
+                  {formatContact(roomForm.contact_tel_name, roomForm.contact_tel_number) && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 truncate max-w-[140px]" title={formatContact(roomForm.contact_tel_name, roomForm.contact_tel_number)!}>
+                      {formatContact(roomForm.contact_tel_name, roomForm.contact_tel_number)}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Contact Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Alex"
+                    value={roomForm.contact_tel_name}
+                    onChange={(e) => setRoomForm({ ...roomForm, contact_tel_name: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 081-xxx-xxxx"
+                    value={roomForm.contact_tel_number}
+                    onChange={(e) => setRoomForm({ ...roomForm, contact_tel_number: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-amber-500 font-mono"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

@@ -52,7 +52,7 @@ The app connects to Supabase with the following Postgres tables in the `public` 
 - **Listing & Pricing**: `room_type`, `size`, `price`, `bedroom`, `bathroom`
 - **Features & Amenities**: `pet`, `pet_allow`, `pet_type`, `furniture`, `electronic`, `parking` (integer, number of cars allowed)
 - **Financial & Terms**: `insurance`, `advance`, `distance` (text, formatted as e.g. `"MRT __ KM, BTS __ KM..."`), `remark`
-- **Contact & Listing URLs**: `link_post`, `contact_line`, `contact_facebook`, `contact_tel`
+- **Contact & Listing URLs**: `link_post`, `contact_line` (formatted `"name/lineid"`), `contact_facebook` (formatted `"name/facebook"`), `contact_tel` (formatted `"name/phone"`)
 
 - **Field Values / Options**:
   - `room_type`: `Studio`, `1 Bed`, `1 Bed Plus`, `2 Bed`, `Duo Space`, `Loft`, `Duplex`, `Corner`, `Clubhouse`, `General`
