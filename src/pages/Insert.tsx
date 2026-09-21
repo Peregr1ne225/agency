@@ -105,11 +105,16 @@ export default function Insert() {
     : null
   const isNewEstate = trimmedEstateName.length > 0 && !matchedEstate
 
-  // Active Estate Type (from matched existing estate, or user selection)
-  const currentEstateType: 'condo' | 'townhome' = matchedEstate
-    ? (matchedEstate.type?.toLowerCase() === 'townhome' ? 'townhome' : 'condo')
-    : roomForm.new_estate_type
+  // When an existing estate is matched, synchronize the estate type dropdown with its recorded type
+  useEffect(() => {
+    if (matchedEstate?.type) {
+      const t = matchedEstate.type.toLowerCase() === 'townhome' ? 'townhome' : 'condo'
+      setRoomForm((prev) => (prev.new_estate_type !== t ? { ...prev, new_estate_type: t } : prev))
+    }
+  }, [matchedEstate?.estate_id, matchedEstate?.type])
 
+  // Active Estate Type is whatever is selected in the Estate Type dropdown
+  const currentEstateType: 'condo' | 'townhome' = roomForm.new_estate_type
   const isTownhome = currentEstateType === 'townhome'
   const availableTypes = isTownhome ? TOWNHOME_HOUSE_TYPES : CONDO_ROOM_TYPES
 
@@ -458,6 +463,7 @@ export default function Insert() {
       {activeTab === 'estate' && (
         <form
           onSubmit={handleEstateSubmit}
+          autoComplete="off"
           className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-6"
         >
           <div>
@@ -475,14 +481,27 @@ export default function Insert() {
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
                 Project Name (`e_name`) <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Ideo Q Sukhumvit 36"
-                value={estateForm.e_name}
-                onChange={(e) => setEstateForm({ ...estateForm, e_name: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  required
+                  autoComplete="off"
+                  placeholder="e.g. Ideo Q Sukhumvit 36"
+                  value={estateForm.e_name}
+                  onChange={(e) => setEstateForm({ ...estateForm, e_name: e.target.value })}
+                  className="w-full pl-3.5 pr-8 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                />
+                {estateForm.e_name && (
+                  <button
+                    type="button"
+                    onClick={() => setEstateForm({ ...estateForm, e_name: '' })}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 bg-zinc-200/80 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 transition-colors cursor-pointer text-xs font-bold"
+                    title="Clear"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Estate Type */}
@@ -510,6 +529,7 @@ export default function Insert() {
               </label>
               <input
                 type="number"
+                autoComplete="off"
                 placeholder="Leave blank for auto ID"
                 value={estateForm.estate_id}
                 onChange={(e) => setEstateForm({ ...estateForm, estate_id: e.target.value })}
@@ -525,6 +545,7 @@ export default function Insert() {
                 </label>
                 <input
                   type="text"
+                  autoComplete="off"
                   placeholder="e.g. 13.7234"
                   value={estateForm.lat}
                   onChange={(e) => setEstateForm({ ...estateForm, lat: e.target.value })}
@@ -537,6 +558,7 @@ export default function Insert() {
                 </label>
                 <input
                   type="text"
+                  autoComplete="off"
                   placeholder="e.g. 100.5792"
                   value={estateForm.lng}
                   onChange={(e) => setEstateForm({ ...estateForm, lng: e.target.value })}
@@ -564,6 +586,7 @@ export default function Insert() {
       {activeTab === 'room' && (
         <form
           onSubmit={handleRoomSubmit}
+          autoComplete="off"
           className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-6"
         >
           <div>
@@ -594,30 +617,47 @@ export default function Insert() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2.5">
-              <input
-                type="text"
-                list="estates-datalist"
-                placeholder="Type or select estate name (e.g. Ideo Q Sukhumvit 36)..."
-                value={roomForm.estate_name}
-                onChange={(e) => setRoomForm({ ...roomForm, estate_name: e.target.value })}
-                className="flex-1 px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-              />
-              {!matchedEstate && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 whitespace-nowrap">Estate Type:</span>
-                  <select
-                    value={roomForm.new_estate_type}
-                    onChange={(e) => setRoomForm({ ...roomForm, new_estate_type: e.target.value as any })}
-                    className="px-3 py-2 rounded-xl text-xs font-semibold border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 outline-none cursor-pointer"
+              <div className="relative flex-1 flex items-center">
+                <input
+                  type="text"
+                  list="estates-datalist"
+                  autoComplete="off"
+                  placeholder="Type or select estate name (e.g. Ideo Q Sukhumvit 36)..."
+                  value={roomForm.estate_name}
+                  onChange={(e) => setRoomForm({ ...roomForm, estate_name: e.target.value })}
+                  className="w-full pl-3.5 pr-8 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                />
+                {roomForm.estate_name && (
+                  <button
+                    type="button"
+                    onClick={() => setRoomForm({ ...roomForm, estate_name: '' })}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer text-xs font-bold"
+                    title="Clear"
                   >
-                    {ESTATE_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                    ✕
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-500 whitespace-nowrap">Estate Type:</span>
+                <select
+                  value={roomForm.new_estate_type}
+                  disabled={Boolean(matchedEstate)}
+                  onChange={(e) => setRoomForm({ ...roomForm, new_estate_type: e.target.value as any })}
+                  title={matchedEstate ? 'Estate type is locked to the selected estate' : 'Select estate type'}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold border outline-none transition-colors ${
+                    matchedEstate
+                      ? 'border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 cursor-not-allowed'
+                      : 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 cursor-pointer'
+                  }`}
+                >
+                  {ESTATE_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <datalist id="estates-datalist">
@@ -638,6 +678,7 @@ export default function Insert() {
               <input
                 type="text"
                 required
+                autoComplete="off"
                 placeholder={isTownhome ? 'e.g. 88/12 or House 5' : 'e.g. 402/15 or 101'}
                 value={roomForm.room_number}
                 onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })}
@@ -670,6 +711,7 @@ export default function Insert() {
               </label>
               <input
                 type="number"
+                autoComplete="off"
                 placeholder="Leave blank for auto ID"
                 value={roomForm.room_id}
                 onChange={(e) => setRoomForm({ ...roomForm, room_id: e.target.value })}
@@ -687,6 +729,7 @@ export default function Insert() {
               </label>
               <input
                 type="number"
+                autoComplete="off"
                 placeholder="e.g. 18000"
                 value={roomForm.price}
                 onChange={(e) => setRoomForm({ ...roomForm, price: e.target.value })}
@@ -702,6 +745,7 @@ export default function Insert() {
               <input
                 type="number"
                 step="0.1"
+                autoComplete="off"
                 placeholder="e.g. 35"
                 value={roomForm.size}
                 onChange={(e) => setRoomForm({ ...roomForm, size: e.target.value })}
@@ -720,6 +764,7 @@ export default function Insert() {
               <input
                 type="number"
                 min="0"
+                autoComplete="off"
                 value={roomForm.bedroom}
                 onChange={(e) => setRoomForm({ ...roomForm, bedroom: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
@@ -734,6 +779,7 @@ export default function Insert() {
               <input
                 type="number"
                 min="0"
+                autoComplete="off"
                 value={roomForm.bathroom}
                 onChange={(e) => setRoomForm({ ...roomForm, bathroom: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
@@ -749,6 +795,7 @@ export default function Insert() {
                 type="number"
                 min="0"
                 step="1"
+                autoComplete="off"
                 placeholder="0"
                 value={roomForm.parking}
                 onChange={(e) => setRoomForm({ ...roomForm, parking: e.target.value })}
@@ -786,6 +833,7 @@ export default function Insert() {
                   type="number"
                   step="0.1"
                   min="0"
+                  autoComplete="off"
                   placeholder="e.g. 0.5"
                   value={roomForm.distance_mrt}
                   onChange={(e) => setRoomForm({ ...roomForm, distance_mrt: e.target.value })}
@@ -802,6 +850,7 @@ export default function Insert() {
                   type="number"
                   step="0.1"
                   min="0"
+                  autoComplete="off"
                   placeholder="e.g. 1.2"
                   value={roomForm.distance_bts}
                   onChange={(e) => setRoomForm({ ...roomForm, distance_bts: e.target.value })}
@@ -818,6 +867,7 @@ export default function Insert() {
                   type="number"
                   step="0.1"
                   min="0"
+                  autoComplete="off"
                   placeholder="e.g. 2.0"
                   value={roomForm.distance_arl}
                   onChange={(e) => setRoomForm({ ...roomForm, distance_arl: e.target.value })}
@@ -834,6 +884,7 @@ export default function Insert() {
                   type="number"
                   step="0.1"
                   min="0"
+                  autoComplete="off"
                   placeholder="e.g. 0.8"
                   value={roomForm.distance_brt}
                   onChange={(e) => setRoomForm({ ...roomForm, distance_brt: e.target.value })}
@@ -848,6 +899,7 @@ export default function Insert() {
                 </label>
                 <input
                   type="text"
+                  autoComplete="off"
                   placeholder="e.g. 1.5 or Pier 500m"
                   value={roomForm.distance_others}
                   onChange={(e) => setRoomForm({ ...roomForm, distance_others: e.target.value })}
@@ -915,6 +967,7 @@ export default function Insert() {
               </label>
               <input
                 type="number"
+                autoComplete="off"
                 placeholder="e.g. 36000"
                 value={roomForm.insurance}
                 onChange={(e) => setRoomForm({ ...roomForm, insurance: e.target.value })}
@@ -927,6 +980,7 @@ export default function Insert() {
               </label>
               <input
                 type="number"
+                autoComplete="off"
                 placeholder="e.g. 18000"
                 value={roomForm.advance}
                 onChange={(e) => setRoomForm({ ...roomForm, advance: e.target.value })}
@@ -983,6 +1037,7 @@ export default function Insert() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     placeholder="e.g. Alex"
                     value={roomForm.contact_line_name}
                     onChange={(e) => setRoomForm({ ...roomForm, contact_line_name: e.target.value })}
@@ -995,6 +1050,7 @@ export default function Insert() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     placeholder="e.g. @agent_line"
                     value={roomForm.contact_line_id}
                     onChange={(e) => setRoomForm({ ...roomForm, contact_line_id: e.target.value })}
@@ -1021,6 +1077,7 @@ export default function Insert() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     placeholder="e.g. Alex"
                     value={roomForm.contact_fb_name}
                     onChange={(e) => setRoomForm({ ...roomForm, contact_fb_name: e.target.value })}
@@ -1033,6 +1090,7 @@ export default function Insert() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     placeholder="e.g. fb.com/alex"
                     value={roomForm.contact_fb_id}
                     onChange={(e) => setRoomForm({ ...roomForm, contact_fb_id: e.target.value })}
@@ -1059,6 +1117,7 @@ export default function Insert() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     placeholder="e.g. Alex"
                     value={roomForm.contact_tel_name}
                     onChange={(e) => setRoomForm({ ...roomForm, contact_tel_name: e.target.value })}
@@ -1071,6 +1130,7 @@ export default function Insert() {
                   </label>
                   <input
                     type="tel"
+                    autoComplete="off"
                     placeholder="e.g. 081-xxx-xxxx"
                     value={roomForm.contact_tel_number}
                     onChange={(e) => setRoomForm({ ...roomForm, contact_tel_number: e.target.value })}
@@ -1089,6 +1149,7 @@ export default function Insert() {
               </label>
               <input
                 type="url"
+                autoComplete="off"
                 placeholder="https://..."
                 value={roomForm.link_post}
                 onChange={(e) => setRoomForm({ ...roomForm, link_post: e.target.value })}
@@ -1101,6 +1162,7 @@ export default function Insert() {
               </label>
               <textarea
                 rows={2}
+                autoComplete="off"
                 placeholder="Extra details, promotions, move-in conditions..."
                 value={roomForm.remark}
                 onChange={(e) => setRoomForm({ ...roomForm, remark: e.target.value })}
