@@ -58,7 +58,7 @@ export default function Insert() {
     electronics: [] as string[],
     pets: [] as string[],
     furniture: 'Fully Furnished',
-    parking: 'yes',
+    parking: '0',
     distance: '',
     insurance: '',
     advance: '',
@@ -223,7 +223,7 @@ export default function Insert() {
       pet_allow: roomForm.pets.length > 0,
       pet_type: roomForm.pets.length > 0 ? roomForm.pets.join(', ') : null,
       furniture: roomForm.furniture.trim() || null,
-      parking: roomForm.parking === 'yes',
+      parking: roomForm.parking !== '' ? (isNaN(Number(roomForm.parking)) ? 0 : parseInt(roomForm.parking, 10)) : null,
       distance: roomForm.distance ? parseFloat(roomForm.distance) : null,
       insurance: roomForm.insurance ? parseFloat(roomForm.insurance) : null,
       advance: roomForm.advance ? parseFloat(roomForm.advance) : null,
@@ -270,6 +270,7 @@ export default function Insert() {
         price: '',
         electronics: [],
         pets: [],
+        parking: '0',
         distance: '',
         insurance: '',
         advance: '',
@@ -330,11 +331,10 @@ export default function Insert() {
             setActiveTab('estate')
             setStatusMsg(null)
           }}
-          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
-            activeTab === 'estate'
+          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${activeTab === 'estate'
               ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
               : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-          }`}
+            }`}
         >
           1. Add Estate (Project)
         </button>
@@ -344,11 +344,10 @@ export default function Insert() {
             setActiveTab('room')
             setStatusMsg(null)
           }}
-          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
-            activeTab === 'room'
+          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer ${activeTab === 'room'
               ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
               : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-          }`}
+            }`}
         >
           2. Add Room (Unit)
         </button>
@@ -357,11 +356,10 @@ export default function Insert() {
       {/* Feedback Banner */}
       {statusMsg && (
         <div
-          className={`p-4 rounded-xl border text-sm font-medium transition-all ${
-            statusMsg.type === 'success'
+          className={`p-4 rounded-xl border text-sm font-medium transition-all ${statusMsg.type === 'success'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800/60'
               : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800/60'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between">
             <span>{statusMsg.text}</span>
@@ -675,16 +673,17 @@ export default function Insert() {
             {/* Parking */}
             <div>
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Parking
+                Parking (Cars Allowed)
               </label>
-              <select
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
                 value={roomForm.parking}
                 onChange={(e) => setRoomForm({ ...roomForm, parking: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500"
-              >
-                <option value="yes">Available (Yes)</option>
-                <option value="no">Not Available (No)</option>
-              </select>
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
+              />
             </div>
           </div>
 
@@ -701,11 +700,10 @@ export default function Insert() {
                     key={item}
                     type="button"
                     onClick={() => toggleElectronic(item)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                      active
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${active
                         ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700'
                         : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
-                    }`}
+                      }`}
                   >
                     {active ? '✓ ' : '+ '} {item}
                   </button>
@@ -727,11 +725,10 @@ export default function Insert() {
                     key={item}
                     type="button"
                     onClick={() => togglePet(item)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                      active
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${active
                         ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
                         : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
-                    }`}
+                      }`}
                   >
                     {active ? '✓ ' : '+ '} {item}
                   </button>

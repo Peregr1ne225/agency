@@ -50,7 +50,7 @@ The app connects to Supabase with the following Postgres tables in the `public` 
 - **Primary Key**: `room_id` (integer)
 - **Foreign Key**: `estate_id` (integer, references `public.estate.estate_id`)
 - **Listing & Pricing**: `room_type`, `size`, `price`, `bedroom`, `bathroom`
-- **Features & Amenities**: `pet`, `pet_allow`, `pet_type`, `furniture`, `electronic`, `parking`
+- **Features & Amenities**: `pet`, `pet_allow`, `pet_type`, `furniture`, `electronic`, `parking` (integer, number of cars allowed)
 - **Financial & Terms**: `insurance`, `advance`, `distance`, `remark`
 - **Contact & Listing URLs**: `link_post`, `contact_line`, `contact_facebook`, `contact_tel`
 

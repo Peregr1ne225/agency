@@ -15,7 +15,7 @@ export interface Room {
   pet_type?: string | null
   furniture?: string | null
   electronic?: string | null
-  parking?: boolean | string | null
+  parking?: number | null
   distance?: number | string | null
   insurance?: number | null
   advance?: number | null
