@@ -59,7 +59,11 @@ export default function Insert() {
     pets: [] as string[],
     furniture: 'Fully Furnished',
     parking: '0',
-    distance: '',
+    distance_mrt: '',
+    distance_bts: '',
+    distance_arl: '',
+    distance_brt: '',
+    distance_others: '',
     insurance: '',
     advance: '',
     remark: '',
@@ -163,6 +167,36 @@ export default function Insert() {
     }
   }
 
+  function getFormattedDistance(): string | null {
+    const parts: string[] = []
+    if (roomForm.distance_mrt.trim()) {
+      const clean = roomForm.distance_mrt.trim().replace(/\s*km$/i, '').trim()
+      parts.push(`MRT ${clean} KM`)
+    }
+    if (roomForm.distance_bts.trim()) {
+      const clean = roomForm.distance_bts.trim().replace(/\s*km$/i, '').trim()
+      parts.push(`BTS ${clean} KM`)
+    }
+    if (roomForm.distance_arl.trim()) {
+      const clean = roomForm.distance_arl.trim().replace(/\s*km$/i, '').trim()
+      parts.push(`ARL ${clean} KM`)
+    }
+    if (roomForm.distance_brt.trim()) {
+      const clean = roomForm.distance_brt.trim().replace(/\s*km$/i, '').trim()
+      parts.push(`BRT ${clean} KM`)
+    }
+    if (roomForm.distance_others.trim()) {
+      const v = roomForm.distance_others.trim()
+      if (/^\d+(\.\d+)?(\s*km)?$/i.test(v)) {
+        const clean = v.replace(/\s*km$/i, '').trim()
+        parts.push(`Other ${clean} KM`)
+      } else {
+        parts.push(v)
+      }
+    }
+    return parts.length > 0 ? parts.join(', ') : null
+  }
+
   // Handle Room Insert (with automatic estate creation if new name typed)
   async function handleRoomSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -224,7 +258,7 @@ export default function Insert() {
       pet_type: roomForm.pets.length > 0 ? roomForm.pets.join(', ') : null,
       furniture: roomForm.furniture.trim() || null,
       parking: roomForm.parking !== '' ? (isNaN(Number(roomForm.parking)) ? 0 : parseInt(roomForm.parking, 10)) : null,
-      distance: roomForm.distance ? parseFloat(roomForm.distance) : null,
+      distance: getFormattedDistance(),
       insurance: roomForm.insurance ? parseFloat(roomForm.insurance) : null,
       advance: roomForm.advance ? parseFloat(roomForm.advance) : null,
       remark: roomForm.remark.trim() || null,
@@ -271,7 +305,11 @@ export default function Insert() {
         electronics: [],
         pets: [],
         parking: '0',
-        distance: '',
+        distance_mrt: '',
+        distance_bts: '',
+        distance_arl: '',
+        distance_brt: '',
+        distance_others: '',
         insurance: '',
         advance: '',
         remark: '',
@@ -598,7 +636,8 @@ export default function Insert() {
             </datalist>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* Price and Size */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Price */}
             <div>
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
@@ -627,21 +666,10 @@ export default function Insert() {
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
               />
             </div>
+          </div>
 
-            {/* Distance */}
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Distance (meters / km)
-              </label>
-              <input
-                type="number"
-                placeholder="e.g. 300"
-                value={roomForm.distance}
-                onChange={(e) => setRoomForm({ ...roomForm, distance: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
-              />
-            </div>
-
+          {/* Bedrooms, Bathrooms, Parking */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {/* Bedrooms */}
             <div>
               <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
@@ -684,6 +712,106 @@ export default function Insert() {
                 onChange={(e) => setRoomForm({ ...roomForm, parking: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
               />
+            </div>
+          </div>
+
+          {/* Transit Distances (MRT, BTS, ARL, BRT, Others) */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-200 dark:border-zinc-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  Distance to Transit
+                </label>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Split by transit lines. Formatted automatically as <code className="font-mono text-purple-600 dark:text-purple-400">MRT __ KM, BTS __ KM...</code>
+                </p>
+              </div>
+              {getFormattedDistance() && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">Preview:</span>
+                  <span className="font-mono font-medium">{getFormattedDistance()}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {/* MRT */}
+              <div>
+                <label className="block text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                  MRT (KM)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 0.5"
+                  value={roomForm.distance_mrt}
+                  onChange={(e) => setRoomForm({ ...roomForm, distance_mrt: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+
+              {/* BTS */}
+              <div>
+                <label className="block text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                  BTS (KM)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 1.2"
+                  value={roomForm.distance_bts}
+                  onChange={(e) => setRoomForm({ ...roomForm, distance_bts: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              {/* ARL */}
+              <div>
+                <label className="block text-xs font-semibold text-rose-600 dark:text-rose-400 mb-1">
+                  ARL (KM)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 2.0"
+                  value={roomForm.distance_arl}
+                  onChange={(e) => setRoomForm({ ...roomForm, distance_arl: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-rose-500 font-mono"
+                />
+              </div>
+
+              {/* BRT */}
+              <div>
+                <label className="block text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1">
+                  BRT (KM)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 0.8"
+                  value={roomForm.distance_brt}
+                  onChange={(e) => setRoomForm({ ...roomForm, distance_brt: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+
+              {/* Others */}
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                  Others
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 1.5 or Pier 500m"
+                  value={roomForm.distance_others}
+                  onChange={(e) => setRoomForm({ ...roomForm, distance_others: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl text-sm border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 font-mono"
+                />
+              </div>
             </div>
           </div>
 
