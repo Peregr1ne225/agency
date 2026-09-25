@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../utils/supabase'
 
@@ -33,6 +33,8 @@ interface EstateItem {
 export default function Insert() {
   const [activeTab, setActiveTab] = useState<'estate' | 'room'>('estate')
   const [estatesList, setEstatesList] = useState<EstateItem[]>([])
+  const [isEstateDropdownOpen, setIsEstateDropdownOpen] = useState(false)
+  const estateDropdownRef = useRef<HTMLDivElement>(null)
 
   // Status feedback
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -104,6 +106,26 @@ export default function Insert() {
     ? estatesList.find((est) => est.e_name?.trim().toLowerCase() === trimmedEstateName.toLowerCase())
     : null
   const isNewEstate = trimmedEstateName.length > 0 && !matchedEstate
+
+  // Filter estates for dropdown autocomplete
+  const filteredEstates = trimmedEstateName
+    ? estatesList.filter((est) => {
+        const nameMatch = est.e_name?.toLowerCase().includes(trimmedEstateName.toLowerCase())
+        const idMatch = est.estate_id?.toString().includes(trimmedEstateName)
+        return nameMatch || idMatch
+      })
+    : estatesList
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (estateDropdownRef.current && !estateDropdownRef.current.contains(event.target as Node)) {
+        setIsEstateDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // When an existing estate is matched, synchronize the estate type dropdown with its recorded type
   useEffect(() => {
@@ -617,25 +639,91 @@ export default function Insert() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2.5">
-              <div className="relative flex-1 flex items-center">
+              <div ref={estateDropdownRef} className="relative flex-1 flex items-center">
                 <input
                   type="text"
-                  list="estates-datalist"
                   autoComplete="off"
                   placeholder="Type or select estate name (e.g. Ideo Q Sukhumvit 36)..."
                   value={roomForm.estate_name}
-                  onChange={(e) => setRoomForm({ ...roomForm, estate_name: e.target.value })}
-                  className="w-full pl-3.5 pr-8 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                  onFocus={() => setIsEstateDropdownOpen(true)}
+                  onChange={(e) => {
+                    setRoomForm({ ...roomForm, estate_name: e.target.value })
+                    setIsEstateDropdownOpen(true)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setIsEstateDropdownOpen(false)
+                  }}
+                  className="w-full pl-3.5 pr-14 py-2.5 rounded-xl text-sm border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                 />
-                {roomForm.estate_name && (
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {roomForm.estate_name && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRoomForm({ ...roomForm, estate_name: '' })
+                        setIsEstateDropdownOpen(true)
+                      }}
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer text-xs font-bold"
+                      title="Clear"
+                    >
+                      ✕
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setRoomForm({ ...roomForm, estate_name: '' })}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer text-xs font-bold"
-                    title="Clear"
+                    onClick={() => setIsEstateDropdownOpen((prev) => !prev)}
+                    className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                    title={isEstateDropdownOpen ? 'Close dropdown' : 'Open dropdown'}
                   >
-                    ✕
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${isEstateDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
+                </div>
+
+                {isEstateDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1.5 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                    {filteredEstates.length > 0 ? (
+                      filteredEstates.map((est) => {
+                        const isSelected = est.e_name?.trim().toLowerCase() === roomForm.estate_name.trim().toLowerCase()
+                        return (
+                          <button
+                            key={est.estate_id}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              setRoomForm({ ...roomForm, estate_name: est.e_name || `Estate #${est.estate_id}` })
+                              setIsEstateDropdownOpen(false)
+                            }}
+                            className={`w-full px-3.5 py-2.5 text-left text-xs sm:text-sm flex items-center justify-between gap-2 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-purple-50/70 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-medium'
+                                : 'text-zinc-800 dark:text-zinc-200'
+                            }`}
+                          >
+                            <span className="truncate">{est.e_name || `Estate #${est.estate_id}`}</span>
+                            <span className="shrink-0 flex items-center gap-1.5 text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                              <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                                #{est.estate_id}
+                              </span>
+                              <span className="capitalize px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
+                                {est.type || 'condo'}
+                              </span>
+                            </span>
+                          </button>
+                        )
+                      })
+                    ) : (
+                      <div className="px-3.5 py-3 text-xs text-zinc-500 dark:text-zinc-400 italic">
+                        No existing estates match "{trimmedEstateName}". It will be auto-created on submit.
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -659,14 +747,6 @@ export default function Insert() {
                 </select>
               </div>
             </div>
-
-            <datalist id="estates-datalist">
-              {estatesList.map((est) => (
-                <option key={est.estate_id} value={est.e_name || `Estate #${est.estate_id}`}>
-                  #{est.estate_id} ({est.type || 'condo'})
-                </option>
-              ))}
-            </datalist>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
